@@ -48,8 +48,13 @@ public class JwtService {
         return secretKey = "RqxPOuVfHoBA8Uq40MhJvfY6qEHOOWWvg6N9W9vt23s=";
     }
 
+//    public String extractUserName(String token) {
+//        return extractClaims(token, Claims::getSubject);
+//    }
     public String extractUserName(String token) {
-        return extractClaims(token, Claims::getSubject);
+        Claims claims = extractClaims(token);
+        System.out.println("Extracted Claims: " + claims);  // Print the claims
+        return claims.getSubject();  // Return the subject (username)
     }
 
     private <T> T extractClaims(String token, Function<Claims,T> claimResolver) {
@@ -57,7 +62,7 @@ public class JwtService {
         return claimResolver.apply(claims);
     }
 
-    private Claims extractClaims(String token) {
+    Claims extractClaims(String token) {
         return Jwts
                 .parser()
                 .verifyWith(generateKey())
@@ -71,11 +76,11 @@ public class JwtService {
         return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    private boolean isTokenExpired(String token) {
+    boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    private Date extractExpiration(String token) {
+    Date extractExpiration(String token) {
         return extractClaims(token, Claims::getExpiration);
     }
 }

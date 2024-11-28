@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">springbbot-security-jwt</a> &gt; <a href="index.source.html" class="el_package">com.dailycodebuffer.security.service</a> &gt; <span class="el_source">ProductService.java</span></div><h1>ProductService.java</h1><pre class="source lang-java linenums">package com.dailycodebuffer.security.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.dailycodebuffer.security.entity.Product;
+import com.dailycodebuffer.security.repository.ProductRepository;
+import com.dailycodebuffer.security.exception.ProductNotFoundException;
+
+/**
+ * Service class for handling product-related business logic.
+ * 
+ * Author: Srinivas Battineni
+ */
+@Service
+<span class="fc" id="L21">public class ProductService {</span>
+
+<span class="fc" id="L23">    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);</span>
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    /**
+     * Adds a new product to the repository.
+     * 
+     * @param product The product to be added.
+     * @return The saved product.
+     */
+    public Product addProduct(Product product) {
+        try {
+<span class="fc" id="L36">            logger.info(&quot;Attempting to add product: {}&quot;, product);</span>
+<span class="fc" id="L37">            Product savedProduct = productRepository.save(product);</span>
+<span class="fc" id="L38">            logger.info(&quot;Product successfully added with ID: {}&quot;, savedProduct.getProductId());</span>
+<span class="fc" id="L39">            return savedProduct;</span>
+<span class="fc" id="L40">        } catch (Exception ex) {</span>
+<span class="fc" id="L41">            logger.error(&quot;Error while adding product: {}&quot;, ex.getMessage());</span>
+<span class="fc" id="L42">            throw new RuntimeException(&quot;Failed to add product. Please try again later.&quot;);</span>
+        }
+    }
+
+    /**
+     * Retrieves all products from the repository.
+     * 
+     * @return A list of all available products.
+     */
+    public List&lt;Product&gt; getAllProducts() {
+        try {
+<span class="fc" id="L53">            logger.info(&quot;Fetching all products from the repository.&quot;);</span>
+<span class="fc" id="L54">            List&lt;Product&gt; products = productRepository.findAll();</span>
+<span class="fc" id="L55">            logger.info(&quot;Total number of products retrieved: {}&quot;, products.size());</span>
+<span class="fc" id="L56">            return products;</span>
+<span class="nc" id="L57">        } catch (Exception ex) {</span>
+<span class="nc" id="L58">            logger.error(&quot;Error while fetching products: {}&quot;, ex.getMessage());</span>
+<span class="nc" id="L59">            throw new RuntimeException(&quot;Failed to fetch products. Please try again later.&quot;);</span>
+        }
+    }
+
+    /**
+     * Retrieves a product by its ID.
+     * 
+     * @param id The ID of the product to retrieve.
+     * @return The retrieved product.
+     * @throws ProductNotFoundException if the product is not found.
+     */
+    public Product getProductById(Integer id) {
+        try {
+<span class="fc" id="L72">            logger.info(&quot;Fetching product with ID: {}&quot;, id);</span>
+<span class="fc" id="L73">            Optional&lt;Product&gt; product = productRepository.findById(id);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">            if (product.isPresent()) {</span>
+<span class="fc" id="L75">                logger.info(&quot;Product retrieved successfully: {}&quot;, product.get());</span>
+<span class="fc" id="L76">                return product.get();</span>
+            } else {
+<span class="fc" id="L78">                logger.warn(&quot;Product not found with ID: {}&quot;, id);</span>
+<span class="fc" id="L79">                throw new ProductNotFoundException(&quot;Product not found with ID: &quot; + id);</span>
+            }
+<span class="fc" id="L81">        } catch (Exception ex) {</span>
+<span class="fc" id="L82">            logger.error(&quot;Error while fetching product with ID {}: {}&quot;, id, ex.getMessage());</span>
+<span class="fc" id="L83">            throw new RuntimeException(&quot;Failed to fetch product. Please try again later.&quot;);</span>
+        }
+    }
+    
+    
+    /**
+     * Updates an existing product in the repository.
+     * 
+     * @param productId The ID of the product to update.
+     * @param updatedProduct The product object with updated details.
+     * @return The updated product.
+     * @throws ProductNotFoundException if the product does not exist.
+     */
+    public Product updateProduct(Integer productId, Product updatedProduct) {
+        try {
+<span class="fc" id="L98">            logger.info(&quot;Attempting to update product with ID: {}&quot;, productId);</span>
+<span class="fc" id="L99">            Product existingProduct = productRepository.findById(productId)</span>
+<span class="fc" id="L100">                    .orElseThrow(() -&gt; new ProductNotFoundException(&quot;Product not found with ID: &quot; + productId));</span>
+            
+            // Update the fields of the existing product
+<span class="fc" id="L103">            existingProduct.setProductName(updatedProduct.getProductName());</span>
+<span class="fc" id="L104">            existingProduct.setPrice(updatedProduct.getPrice());</span>
+            
+<span class="fc" id="L106">            Product savedProduct = productRepository.save(existingProduct);</span>
+<span class="fc" id="L107">            logger.info(&quot;Product successfully updated: {}&quot;, savedProduct);</span>
+<span class="fc" id="L108">            return savedProduct;</span>
+<span class="fc" id="L109">        } catch (Exception ex) {</span>
+<span class="fc" id="L110">            logger.error(&quot;Error while updating product with ID {}: {}&quot;, productId, ex.getMessage());</span>
+<span class="fc" id="L111">            throw new RuntimeException(&quot;Failed to update product. Please try again later.&quot;);</span>
+        }
+    }
+
+    /**
+     * Deletes a product by its ID.
+     * 
+     * @param productId The ID of the product to delete.
+     * @throws ProductNotFoundException if the product does not exist.
+     */
+    public void deleteProduct(Integer productId) {
+        try {
+<span class="fc" id="L123">            logger.info(&quot;Attempting to delete product with ID: {}&quot;, productId);</span>
+<span class="fc" id="L124">            Product existingProduct = productRepository.findById(productId)</span>
+<span class="fc" id="L125">                    .orElseThrow(() -&gt; new ProductNotFoundException(&quot;Product not found with ID: &quot; + productId));</span>
+            
+<span class="fc" id="L127">            productRepository.delete(existingProduct);</span>
+<span class="fc" id="L128">            logger.info(&quot;Product successfully deleted with ID: {}&quot;, productId);</span>
+<span class="fc" id="L129">        } catch (Exception ex) {</span>
+<span class="fc" id="L130">            logger.error(&quot;Error while deleting product with ID {}: {}&quot;, productId, ex.getMessage());</span>
+<span class="fc" id="L131">            throw new RuntimeException(&quot;Failed to delete product. Please try again later.&quot;);</span>
+        }
+<span class="fc" id="L133">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>

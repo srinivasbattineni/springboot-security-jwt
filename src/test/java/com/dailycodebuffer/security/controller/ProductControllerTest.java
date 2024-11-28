@@ -1,267 +1,147 @@
 package com.dailycodebuffer.security.controller;
 
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import com.dailycodebuffer.security.entity.Product;
-import com.dailycodebuffer.security.service.ProductService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-@SpringBootTest
-@AutoConfigureMockMvc
-//@ExtendWith(MockitoExtension.class)
-
-//@EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
-public class ProductControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
-    private ProductService productService;
-
-    @Autowired
-    private ProductController productController;  
-
-    
-    @Test
-    //@WithMockUser(username = "testuser", roles = "USER") 
-    void testAddProduct() throws Exception {
-    	
-    	Product product = new Product();
-        
-        product.setProductId(1);
-        product.setProductName("product Name");
-        product.setPrice(100.0);
-        // Arrange: Mock the behavior of the productService
-        when(productService.addProduct(Mockito.any(Product.class))).thenReturn(product);
-
-        Product product2 = new Product();
-        
-        product2.setProductId(1);
-        product2.setProductName("product Name");
-        product2.setPrice(100.0);
-        
-        String content = (new ObjectMapper()).writeValueAsString(product2);
-        MockHttpServletRequestBuilder requestBuilder =MockMvcRequestBuilders.post("/product/add")
-        		.contentType(MediaType.APPLICATION_JSON).content(content);
-        
-        MockMvcBuilders.standaloneSetup(productController)
-        .build()
-        .perform(requestBuilder)
-        .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
-		.andExpect(
-				MockMvcResultMatchers.content().string("{\"productId\":1,\"productName\":\"product Name\",\"price\":100.0}"));
-    }
-    
-    @Test
-     void testGetProducts() throws Exception {
-//        // Arrange
-//        List<Product> products = Arrays.asList(
-//                new Product(1, "Product1", 50.0),
-//                new Product(2, "Product2", 100.0)
-//        );
-        when(productService.getAllProducts()).thenReturn(new ArrayList<>());
-        MockHttpServletRequestBuilder requestBuilder =MockMvcRequestBuilders.get("/");
-        
-        MockMvcBuilders.standaloneSetup(productController)
-        .build()
-        .perform(requestBuilder)
-        .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
-		.andExpect(
-				MockMvcResultMatchers.content().string("[]"));
-    }
-//        // Assert
-//        List<Product> response = Arrays.asList(objectMapper.readValue(result.getResponse().getContentAsString(), Product[].class));
-//        assertEquals(2, response.size());
-//        assertEquals("Product1", response.get(0).getProductName());
-//        verify(productService, times(1)).getAllProducts();
-//    }
-    
-       /* // Act: Perform POST request
-        mockMvc.perform(post("/product/add")
-                .contentType("application/json")
-                .content("{\"productId\":1,\"name\":\"Test Product\",\"price\":100.0}"))
-                .andExpect(status().isOk()) // Assert: Status 200 OK
-                .andExpect(jsonPath("$.productId").value(1)) // Check if productId is returned as 1
-                .andExpect(jsonPath("$.setProductName").value("Test Product")) // Check if name is returned correctly
-                .andExpect(jsonPath("$.price").value(100.0)); // Check if price is returned correctly
-
-        // Verify that the productService.addProduct method was called once
-        verify(productService, times(1)).addProduct(any(Product.class));
-    }*/
-}
-
-
-/*import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Arrays;
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.DefaultCsrfToken;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-
 import com.dailycodebuffer.security.entity.Product;
 import com.dailycodebuffer.security.exception.ProductNotFoundException;
-import com.dailycodebuffer.security.service.JwtService;
 import com.dailycodebuffer.security.service.ProductService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
 
+import java.util.Arrays;
+import java.util.List;
 
-@WebMvcTest(ProductController.class)
-public class ProductControllerTest {
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
-    @MockBean
-    private JwtService jwtService;
+class ProductControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private ProductService productService;
 
     @InjectMocks
     private ProductController productController;
 
-    @Autowired
-    private ObjectMapper objectMapper; // Converts objects to/from JSON
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-
-//    @Test
-//    public void testAddProduct() throws Exception {
-//        // Mock a CSRF token
-//        CsrfToken csrfToken = new DefaultCsrfToken("X-CSRF-TOKEN", "_csrf", "dummy-csrf-token");
-//
-//        mockMvc.perform(post("/product/add")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content("{\"productId\":null,\"productName\":\"TestProduct\",\"price\":100}")
-//                .with(SecurityMockMvcRequestPostProcessors.csrf()))
-//                .andExpect(status().isOk()); // Adjust expected status
-//    }
     @Test
-    public void testGetProducts() throws Exception {
+    void testAddProduct() {
+        // Arrange
+        Product product = new Product(1, "Test Product", 100.0);
+        when(productService.addProduct(product)).thenReturn(product);
+
+        // Act
+        Product result = productController.addProduct(product);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.getProductId()).isEqualTo(1);
+        verify(productService, times(1)).addProduct(product);
+    }
+
+    @Test
+    void testGetProducts() {
         // Arrange
         List<Product> products = Arrays.asList(
-                new Product(1, "Product1", 50.0),
-                new Product(2, "Product2", 100.0)
+                new Product(1, "Product 1", 100.0),
+                new Product(2, "Product 2", 200.0)
         );
         when(productService.getAllProducts()).thenReturn(products);
 
         // Act
-        MvcResult result = mockMvc.perform(get("/product")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
+        List<Product> result = productController.getProducts();
 
         // Assert
-        List<Product> response = Arrays.asList(objectMapper.readValue(result.getResponse().getContentAsString(), Product[].class));
-        assertEquals(2, response.size());
-        assertEquals("Product1", response.get(0).getProductName());
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getProductName()).isEqualTo("Product 1");
         verify(productService, times(1)).getAllProducts();
     }
 
     @Test
-    public void testGetProductByIdSuccess() throws Exception {
+    void testGetProductById_Success() {
         // Arrange
         Product product = new Product(1, "Test Product", 100.0);
         when(productService.getProductById(1)).thenReturn(product);
 
         // Act
-        MvcResult result = mockMvc.perform(get("/product/1")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
+        ResponseEntity<?> response = productController.getProductById(1);
 
         // Assert
-        Product response = objectMapper.readValue(result.getResponse().getContentAsString(), Product.class);
-        assertEquals(1, response.getProductId());
-        assertEquals("Test Product", response.getProductName());
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo(product);
         verify(productService, times(1)).getProductById(1);
     }
 
     @Test
-    public void testGetProductByIdNotFound() throws Exception {
+    void testGetProductById_NotFound() {
         // Arrange
         when(productService.getProductById(1)).thenThrow(new ProductNotFoundException("Product not found"));
 
         // Act
-        MvcResult result = mockMvc.perform(get("/product/1")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andReturn();
+        ResponseEntity<?> response = productController.getProductById(1);
 
         // Assert
-        assertEquals("Product not found", result.getResponse().getContentAsString());
+        assertThat(response.getStatusCodeValue()).isEqualTo(404);
+        assertThat(response.getBody()).isEqualTo("Product not found");
         verify(productService, times(1)).getProductById(1);
     }
 
     @Test
-    public void testUpdateProduct() throws Exception {
+    void testUpdateProduct_Success() {
         // Arrange
         Product updatedProduct = new Product(1, "Updated Product", 150.0);
         when(productService.updateProduct(eq(1), any(Product.class))).thenReturn(updatedProduct);
 
         // Act
-        MvcResult result = mockMvc.perform(put("/product/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedProduct)))
-                .andExpect(status().isOk())
-                .andReturn();
+        ResponseEntity<?> response = productController.updateProduct(1, updatedProduct);
 
         // Assert
-        Product response = objectMapper.readValue(result.getResponse().getContentAsString(), Product.class);
-        assertEquals("Updated Product", response.getProductName());
-        assertEquals(150.0, response.getPrice());
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo(updatedProduct);
         verify(productService, times(1)).updateProduct(eq(1), any(Product.class));
     }
 
     @Test
-    public void testDeleteProduct() throws Exception {
+    void testUpdateProduct_NotFound() {
+        // Arrange
+        when(productService.updateProduct(eq(1), any(Product.class))).thenThrow(new ProductNotFoundException("Product not found"));
+
         // Act
-        MvcResult result = mockMvc.perform(delete("/product/1")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
+        ResponseEntity<?> response = productController.updateProduct(1, new Product());
 
         // Assert
-        assertEquals("Product deleted successfully.", result.getResponse().getContentAsString());
+        assertThat(response.getStatusCodeValue()).isEqualTo(404);
+        assertThat(response.getBody()).isEqualTo("Product not found");
+        verify(productService, times(1)).updateProduct(eq(1), any(Product.class));
+    }
+
+    @Test
+    void testDeleteProduct_Success() {
+        // Act
+        ResponseEntity<?> response = productController.deleteProduct(1);
+
+        // Assert
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo("Product deleted successfully.");
         verify(productService, times(1)).deleteProduct(1);
     }
-}*/
+
+    @Test
+    void testDeleteProduct_NotFound() {
+        // Arrange
+        doThrow(new ProductNotFoundException("Product not found")).when(productService).deleteProduct(1);
+
+        // Act
+        ResponseEntity<?> response = productController.deleteProduct(1);
+
+        // Assert
+        assertThat(response.getStatusCodeValue()).isEqualTo(404);
+        assertThat(response.getBody()).isEqualTo("Product not found");
+        verify(productService, times(1)).deleteProduct(1);
+    }
+}

@@ -1,5 +1,7 @@
 package com.dailycodebuffer.security.entity;
 
+import java.util.ArrayList;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -12,7 +14,10 @@ public class User {
     private String userName;
     private String password;
     
-    public Integer getId() {
+    public User(String string, String string2, ArrayList arrayList) {
+		// TODO Auto-generated constructor stub
+	}
+	public Integer getId() {
         return id;
     }
     public void setId(Integer id) {

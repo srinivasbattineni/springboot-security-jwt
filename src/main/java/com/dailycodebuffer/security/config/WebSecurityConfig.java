@@ -26,7 +26,7 @@ public class WebSecurityConfig {
         this.userDetailsService = userDetailsService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
-
+    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
@@ -41,8 +41,7 @@ public class WebSecurityConfig {
                         UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
     }
-
-
+    
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {

@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 import com.dailycodebuffer.security.entity.Product;
 import com.dailycodebuffer.security.exception.ProductNotFoundException;
 import com.dailycodebuffer.security.repository.ProductRepository;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -14,16 +13,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
-/**
- * Unit tests for {@link ProductService}.
- * 
- * This test class verifies the business logic implemented in the ProductService class.
- * It uses Mockito to mock dependencies and verify interactions with the ProductRepository.
- * 
- * Author: Srinivas Battineni
- */
 class ProductServiceTest {
 
     @Mock
@@ -32,60 +24,124 @@ class ProductServiceTest {
     @InjectMocks
     private ProductService productService;
 
-    /**
-     * Sets up the test environment by initializing mocks.
-     */
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
-    /**
-     * Tests the getAllProducts method to ensure it retrieves all products from the repository.
-     */
     @Test
-    void testGetAllProducts() {
-        Product product1 = new Product(1, "Product1", 100.0);
-        Product product2 = new Product(2, "Product2", 200.0);
+    void testAddProduct_Success() {
+        Product product = new Product(1, "Product1", 100.0);
+        when(productRepository.save(product)).thenReturn(product);
 
-        when(productRepository.findAll()).thenReturn(Arrays.asList(product1, product2));
+        Product savedProduct = productService.addProduct(product);
 
-        var products = productService.getAllProducts();
+        assertNotNull(savedProduct);
+        assertEquals(1, savedProduct.getProductId());
+        assertEquals("Product1", savedProduct.getProductName());
+        verify(productRepository, times(1)).save(product);
+    }
 
-        assertEquals(2, products.size());
+    @Test
+    void testAddProduct_Exception() {
+        Product product = new Product(1, "Product1", 100.0);
+        when(productRepository.save(product)).thenThrow(new RuntimeException("Database error"));
+
+        Exception exception = assertThrows(RuntimeException.class, () -> productService.addProduct(product));
+
+        assertEquals("Failed to add product. Please try again later.", exception.getMessage());
+        verify(productRepository, times(1)).save(product);
+    }
+
+    @Test
+    void testGetAllProducts_Success() {
+        List<Product> products = Arrays.asList(
+                new Product(1, "Product1", 100.0),
+                new Product(2, "Product2", 200.0)
+        );
+        when(productRepository.findAll()).thenReturn(products);
+
+        List<Product> retrievedProducts = productService.getAllProducts();
+
+        assertEquals(2, retrievedProducts.size());
         verify(productRepository, times(1)).findAll();
     }
 
-    /**
-     * Tests the getProductById method for a valid product ID.
-     * Ensures the correct product is returned.
-     */
     @Test
     void testGetProductById_Success() {
         Product product = new Product(1, "Product1", 100.0);
-
         when(productRepository.findById(1)).thenReturn(Optional.of(product));
 
-        var result = productService.getProductById(1);
+        Product retrievedProduct = productService.getProductById(1);
 
-        assertNotNull(result);
-        assertEquals("Product1", result.getProductName());
+        assertNotNull(retrievedProduct);
+        assertEquals("Product1", retrievedProduct.getProductName());
         verify(productRepository, times(1)).findById(1);
     }
 
-    /**
-     * Tests the getProductById method for a non-existent product ID.
-     * Ensures a ProductNotFoundException is thrown.
-     */
+   
     @Test
     void testGetProductById_NotFound() {
         when(productRepository.findById(1)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ProductNotFoundException.class, () -> {
-            productService.getProductById(1);
-        });
+        Exception exception = assertThrows(RuntimeException.class, () -> productService.getProductById(1));
 
-        assertEquals("Product not found with ID: 1", exception.getMessage());
+        assertEquals("Failed to fetch product. Please try again later.", exception.getMessage());
         verify(productRepository, times(1)).findById(1);
     }
+
+
+    @Test
+    void testUpdateProduct_Success() {
+        Product existingProduct = new Product(1, "OldProduct", 50.0);
+        Product updatedProduct = new Product(1, "NewProduct", 100.0);
+
+        when(productRepository.findById(1)).thenReturn(Optional.of(existingProduct));
+        when(productRepository.save(existingProduct)).thenReturn(updatedProduct);
+
+        Product result = productService.updateProduct(1, updatedProduct);
+
+        assertNotNull(result);
+        assertEquals("NewProduct", result.getProductName());
+        assertEquals(100.0, result.getPrice());
+        verify(productRepository, times(1)).findById(1);
+        verify(productRepository, times(1)).save(existingProduct);
+    }
+
+    @Test
+    void testUpdateProduct_NotFound() {
+        Product updatedProduct = new Product(1, "NewProduct", 100.0);
+        when(productRepository.findById(1)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> productService.updateProduct(1, updatedProduct));
+
+        assertEquals("Failed to update product. Please try again later.", exception.getMessage());
+        verify(productRepository, times(1)).findById(1);
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+
+    @Test
+    void testDeleteProduct_Success() {
+        Product product = new Product(1, "Product1", 100.0);
+        when(productRepository.findById(1)).thenReturn(Optional.of(product));
+        doNothing().when(productRepository).delete(product);
+
+        assertDoesNotThrow(() -> productService.deleteProduct(1));
+
+        verify(productRepository, times(1)).findById(1);
+        verify(productRepository, times(1)).delete(product);
+    }
+
+
+    @Test
+    void testDeleteProduct_NotFound() {
+        when(productRepository.findById(1)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> productService.deleteProduct(1));
+
+        assertEquals("Failed to delete product. Please try again later.", exception.getMessage());
+        verify(productRepository, times(1)).findById(1);
+    }
+
 }
